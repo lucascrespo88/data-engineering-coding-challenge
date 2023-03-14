@@ -13,7 +13,7 @@ doc = xml.dom.minidom.parse(full_path)
 
 uri = "neo4j://localhost:7687"
 username = "neo4j"
-password = "caramelo"
+password = "neo4j"
 driver = GraphDatabase.driver(uri, auth=(username, password))
 
 
