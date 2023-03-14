@@ -29,6 +29,18 @@ protein_aux['protein_id'] = protein_id
 protein_aux['protein_name'] = protein_name
 proteins.append(protein_aux)
 
+
+# CLEAR THE DATABASE
+
+cypher_query = """
+        MATCH (n)
+DETACH DELETE n
+    """
+
+with driver.session() as session:
+        session.run(cypher_query, data=None)
+
+
 # QUERY TO CREATE THE MAIN PROTEIN NODE
 
 cypher_query = """
