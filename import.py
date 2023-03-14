@@ -3,6 +3,11 @@ import os
 from neo4j import GraphDatabase
 
 
+def execute_query(cypher_query,payload):
+    with driver.session() as session:
+         session.run(cypher_query, data=payload)
+
+
 
 absolute_path = os.path.dirname(__file__)
 relative_path = "data/Q9Y261.xml"
@@ -37,8 +42,7 @@ cypher_query = """
 DETACH DELETE n
     """
 
-with driver.session() as session:
-        session.run(cypher_query, data=None)
+execute_query(cypher_query,payload = None)
 
 
 # QUERY TO CREATE THE MAIN PROTEIN NODE
@@ -48,8 +52,7 @@ cypher_query = """
         CREATE (p:Protein {name: row.protein_name, id: row.protein_id})
     """
 
-with driver.session() as session:
-        session.run(cypher_query, data=proteins)
+execute_query(cypher_query,payload = proteins)
 
 
 
@@ -101,8 +104,7 @@ cypher_query = """
         CREATE (p:FullName {name: row.value, name_type: row.name_type})
     """
 
-with driver.session() as session:
-        session.run(cypher_query, data=fullnames)
+execute_query(cypher_query,payload =fullnames)
 
 # Asociating the full names with the protein
 cypher_query = """
@@ -114,8 +116,7 @@ WHERE a.id = row.protein_id AND (b.name = row.value and b.name_type = row.name_t
 CREATE (a)-[:HAS_FULL_NAME]->(b)
  """
 
-with driver.session() as session:
-     session.run(cypher_query, data=fullnames)
+execute_query(cypher_query,payload = fullnames)
 
 # Storing all the nodes with the short names
 cypher_query = """
@@ -123,8 +124,7 @@ cypher_query = """
         CREATE (p:ShortName {name: row.value, name_type: row.name_type})
     """
 
-with driver.session() as session:
-     session.run(cypher_query, data=shortnames)
+execute_query(cypher_query,payload = shortnames)
 
 # Asociating the short names with the full names
 
@@ -137,8 +137,7 @@ WHERE (a.name = row.full_name and a.name_type=row.name_type) AND (b.name = row.v
 CREATE (a)-[:HAS_SHORT_NAME]->(b)
  """
 
-with driver.session() as session:
-     session.run(cypher_query, data=shortnames)
+execute_query(cypher_query,payload = shortnames)
 
 
 
@@ -160,8 +159,7 @@ cypher_query = """
         CREATE (p:Gene {name: row.name})
     """
 
-with driver.session() as session:
-     session.run(cypher_query, data=genes)
+execute_query(cypher_query,payload = genes)
 
 cypher_query = """
 UNWIND $data AS row
@@ -172,8 +170,7 @@ WHERE a.id = row.protein_id AND b.name = row.name
 CREATE (a)-[:FROM_GENE {status:row.type}]->(b)
  """
 
-with driver.session() as session:
-     session.run(cypher_query, data=genes)
+execute_query(cypher_query,payload = genes)
 
 
 organisms = []
@@ -196,8 +193,7 @@ cypher_query = """
         CREATE (p:Organism {common_name: row.common_name, scientific_name:row.scientific_name})
     """
 
-with driver.session() as session:
-     session.run(cypher_query, data=organisms)
+execute_query(cypher_query,payload = organisms)
 
 cypher_query = """
 UNWIND $data AS row
@@ -208,8 +204,7 @@ WHERE a.id = row.protein_id AND b.scientific_name = row.scientific_name
 CREATE (a)-[:IN_ORGANISM]->(b)
  """
 
-with driver.session() as session:
-     session.run(cypher_query, data=organisms)
+execute_query(cypher_query,payload = organisms)
 
 #extracting the lineage data from the XML
 organism_lineages = []
@@ -226,8 +221,7 @@ cypher_query = """
         CREATE (p:OrganismLineage {taxonomy: row.taxonomy})
     """
 
-with driver.session() as session:
-     session.run(cypher_query, data=organism_lineages)
+execute_query(cypher_query,payload = organism_lineages)
 
 
 cypher_query = """
@@ -239,8 +233,7 @@ WHERE  a.scientific_name = row.scientific_name and b.taxonomy=row.taxonomy
 CREATE (a)-[:IN_LINEAGE]->(b)
  """
 
-with driver.session() as session:
-     session.run(cypher_query, data=organism_lineages)
+execute_query(cypher_query,payload = organism_lineages)
 
 references = []
 authors = []
@@ -295,8 +288,7 @@ cypher_query = """
         , citation_date:row.citation_date, citation_volume:row.citation_volume, citation_first:row.citation_volume, citation_last:row.citation_last})
     """
 
-with driver.session() as session:
-     session.run(cypher_query, data=references)
+execute_query(cypher_query,payload = references)
 
 #Linking Reference Nodes with the protein
 cypher_query = """
@@ -308,8 +300,7 @@ WHERE a.id = row.protein_id AND b.key = row.key
 CREATE (a)-[:HAS_REFERENCE]->(b)
  """
 
-with driver.session() as session:
-     session.run(cypher_query, data=references)
+execute_query(cypher_query,payload = references)
 
 
 #Linking attributes from References : Authors, Scopes and Databases
@@ -321,8 +312,7 @@ cypher_query = """
         CREATE (p:Author {name: row.name})
     """
 
-with driver.session() as session:
-     session.run(cypher_query, data=authors)
+execute_query(cypher_query,payload = authors)
 
 cypher_query = """
 UNWIND $data AS row
@@ -333,8 +323,7 @@ WHERE a.key = row.reference_key AND b.name = row.name
 CREATE (a)-[:HAS_AUTHOR]->(b)
  """
 
-with driver.session() as session:
-     session.run(cypher_query, data=authors)
+execute_query(cypher_query,payload = authors)
 
 
 #DATABASES
@@ -344,8 +333,7 @@ cypher_query = """
         CREATE (p:Database {id: row.id, type:row.type})
     """
 
-with driver.session() as session:
-     session.run(cypher_query, data=databases)
+execute_query(cypher_query,payload = databases)
 
 cypher_query = """
 UNWIND $data AS row
@@ -356,8 +344,7 @@ WHERE a.key = row.reference_key AND b.id = row.id
 CREATE (a)-[:HAS_DATABASE]->(b)
  """
 
-with driver.session() as session:
-     session.run(cypher_query, data=databases)
+execute_query(cypher_query,payload = databases)
 
 #SCOPES
 
@@ -366,8 +353,7 @@ cypher_query = """
         CREATE (p:Scope {scope: row.scope})
     """
 
-with driver.session() as session:
-     session.run(cypher_query, data=scopes)
+execute_query(cypher_query,payload = scopes)
 
 cypher_query = """
 UNWIND $data AS row
@@ -378,5 +364,97 @@ WHERE a.key = row.reference_key AND b.scope = row.scope
 CREATE (a)-[:HAS_SCOPE]->(b)
  """
 
-with driver.session() as session:
-     session.run(cypher_query, data=scopes)
+execute_query(cypher_query,payload = scopes)
+
+
+#FEATURES
+
+features = []
+
+features_elems = doc.getElementsByTagName("feature")
+
+for f in features_elems:
+    feature_aux ={}
+    feature_aux['protein_id'] = protein_id
+    feature_aux['type'] = f.getAttribute("type")
+    feature_aux['description'] = f.getAttribute("description")
+    feature_aux['evidence'] = f.getAttribute("evidence")
+    location_elems = f.getElementsByTagName("location")[0]
+    if len(location_elems.getElementsByTagName("position"))>0:
+        feature_aux['position'] = location_elems.getElementsByTagName("position")[0].getAttribute('position')
+        feature_aux['begin'] = 0
+        feature_aux['end'] = 0
+    if len(location_elems.getElementsByTagName("begin"))>0:
+        feature_aux['position'] = 0
+        feature_aux['begin'] = location_elems.getElementsByTagName("begin")[0].getAttribute('position')
+    if len(location_elems.getElementsByTagName("end"))>0:
+        feature_aux['end'] = location_elems.getElementsByTagName("end")[0].getAttribute('position')
+    features.append(feature_aux)
+
+cypher_query = """
+        UNWIND $data AS row
+        CREATE (p:Feature {type: row.type, description: row.description, evidence: row.evidence, position: row.position, position_begin: row.begin,  position_end: row.end})
+    """
+
+execute_query(cypher_query,payload = features)
+
+
+##SOME FEATURE HAS A POSITION VALUE AND OTHERS HAVE A POSITION RANGE, SO I DIVIDED THE TWO CASES IN DIFFERENT QUERIES
+
+cypher_query = """
+UNWIND $data AS row
+MATCH
+  (a:Protein),
+  (b:Feature)
+WHERE a.id = row.protein_id AND b.type = row.type and row.evidence=b.evidence and b.position_begin = row.begin and row.position = 0
+CREATE (a)-[:HAS_FEATURE {position_begin:row.begin, position_end:row.end}]->(b)
+ """
+execute_query(cypher_query,payload = features)
+
+cypher_query = """
+UNWIND $data AS row
+MATCH
+  (a:Protein),
+  (b:Feature)
+WHERE a.id = row.protein_id AND (b.type = row.type and row.begin = 0 and row.evidence=b.evidence and b.position=row.position)
+CREATE (a)-[:HAS_FEATURE {position:row.position}]->(b)
+ """
+execute_query(cypher_query,payload = features)
+
+## EXTRACTING THE EVIDENCE DATA ASOCIATED TO THE PROTEIN
+
+evidences = []
+
+evidence_elems = doc.getElementsByTagName("evidence")
+
+for e in evidence_elems:
+    evidence_aux ={}
+    evidence_aux['protein_id'] = protein_id
+    evidence_aux['type'] = e.getAttribute("type")
+    evidence_aux['key'] = e.getAttribute("key")
+    if len( e.getElementsByTagName("source"))>0:
+        source = e.getElementsByTagName("source")[0]
+        evidence_aux['dbreference_type'] = source.getAttribute("type")
+        evidence_aux['dbreference_id'] = source.getAttribute("id")
+    else:
+        evidence_aux['dbreference_type'] = None
+        evidence_aux['dbreference_id'] = None
+    evidences.append(evidence_aux)
+
+cypher_query = """
+        UNWIND $data AS row
+        CREATE (p:Evidence {type: row.type, key: row.key, dbreference_type: row.dbreference_type, dbreference_id: row.dbreference_id})
+    """
+
+execute_query(cypher_query,payload = evidences)
+
+cypher_query = """
+UNWIND $data AS row
+MATCH
+  (a:Protein),
+  (b:Evidence)
+WHERE a.id = row.protein_id AND b.key = row.key
+CREATE (a)-[:HAS_EVIDENCE]->(b)
+ """
+
+execute_query(cypher_query,payload = evidences)
